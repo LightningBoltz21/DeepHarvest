@@ -28,3 +28,6 @@ web/dist/
 
 # OS
 .DS_Store
+
+# Local screenshot originals; the published copy is web/public/og.png
+.screenshots/
