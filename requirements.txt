@@ -1,0 +1,21 @@
+# Data pipeline
+pandas>=2.2
+pyarrow>=16.0
+numpy>=1.26
+requests>=2.32
+
+# Notebook
+jupyterlab>=4.2
+matplotlib>=3.9
+nbformat>=5.10
+
+# Modelling — see the libomp warning in README.md:
+# lightgbm and torch segfault if imported into the SAME process on macOS.
+# Install both if you like, but use one per process.
+lightgbm>=4.5
+torch>=2.4
+scikit-learn>=1.5
+
+# Optional API layer
+fastapi>=0.115
+uvicorn[standard]>=0.30

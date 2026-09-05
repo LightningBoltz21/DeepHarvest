@@ -1,0 +1,136 @@
+/* Design tokens shared with anishmalepati.vercel.app.
+ *
+ * Colors, type scale and spacing are lifted from the personal site's compiled
+ * stylesheet so the two properties read as the same hand. The map's own color
+ * scales are NOT here -- see lib/colorScales.ts, which needs perceptually
+ * ordered ramps that the UI palette deliberately doesn't provide. */
+
+/* Fonts are bundled, not fetched from a CDN: the site has to work as a purely
+ * static deploy with no third-party requests at runtime. Only the weights the
+ * UI uses, and only the latin subset, are imported. */
+@import "@fontsource/plus-jakarta-sans/latin-400.css";
+@import "@fontsource/plus-jakarta-sans/latin-500.css";
+@import "@fontsource/plus-jakarta-sans/latin-600.css";
+@import "@fontsource/poppins/latin-600.css";
+@import "@fontsource/poppins/latin-800.css";
+@import "@fontsource/geist-mono/latin-400.css";
+@import "@fontsource/geist-mono/latin-500.css";
+
+:root {
+  /* surfaces */
+  --bg: #0a0e14;
+  --bg-2: #070a0f;
+  --surface: #111823;
+  --surface-2: #18202c;
+  --surface-hover: #151d28;
+
+  /* lines */
+  --line: #ffffff14;
+  --line-strong: #ffffff21;
+  --glass: #ffffff08;
+
+  /* text */
+  --text: #edf1f6;
+  --muted: #8a94a3;
+  --faint: #68707c;
+
+  /* accent (gold) */
+  --ghost: #a98a38;
+  --accent: #c8a951;
+  --accent-hover: #d9bc69;
+  --accent-active: #b8963f;
+  --accent-soft: #c8a95129;
+
+  /* type */
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Poppins", var(--font-sans);
+  --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* Well above the personal site's scale: this is a data tool read at arm's
+   * length, not a portfolio page, and the numbers have to stay legible next to
+   * a dense map. */
+  --text-xs: 1.0625rem;
+  --text-sm: 1.1875rem;
+  --text-base: 1.3125rem;
+  --text-lg: 1.5625rem;
+  --text-xl: 1.8125rem;
+  --text-2xl: 2.25rem;
+  --text-3xl: 2.625rem;
+
+  --tracking-label: 0.12em;
+
+  /* spacing: 4px base, same scale as the personal site */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+
+  /* radii */
+  --radius-sm: 0.55rem;
+  --radius-md: 0.7rem;
+  --radius-lg: 0.9rem;
+  --radius-pill: 999px;
+
+  --header-height: 4.75rem;
+  --sidebar-width: 22.5rem;
+  --rank-width: 25.5rem;
+
+  /* map trend indicators */
+  --up: #57b46a;
+  --down: #d1544a;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* A visible focus ring everywhere, in the accent so it reads as intentional
+ * rather than as the browser default. */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.label {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
