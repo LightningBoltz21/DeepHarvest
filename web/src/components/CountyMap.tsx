@@ -230,34 +230,83 @@ export function CountyMap({
     pickRef.current = pick;
   }, [path, size, drawList]);
 
-  const handleMove = useCallback(
-    (e: React.PointerEvent<HTMLCanvasElement>) => {
+  /** County under a client-space point, or null if that point is off-map. */
+  const pickAt = useCallback(
+    (clientX: number, clientY: number): string | null => {
       const pick = pickRef.current;
       const canvas = canvasRef.current;
-      if (!pick || !canvas) return;
+      if (!pick || !canvas) return null;
       const rect = canvas.getBoundingClientRect();
-      const [x, y] = transform.invert([e.clientX - rect.left, e.clientY - rect.top]);
-      if (x < 0 || y < 0 || x >= pick.width || y >= pick.height) {
+      const [x, y] = transform.invert([clientX - rect.left, clientY - rect.top]);
+      if (x < 0 || y < 0 || x >= pick.width || y >= pick.height) return null;
+      const ctx = pick.getContext("2d", { willReadFrequently: true });
+      if (!ctx) return null;
+      const [r, g, b] = ctx.getImageData(Math.round(x), Math.round(y), 1, 1).data;
+      const index = colorToIndex(r, g, b) - 1;
+      const f = index >= 0 ? drawList[index] : undefined;
+      return f ? String(f.id) : null;
+    },
+    [drawList, transform],
+  );
+
+  const selectCounty = useCallback(
+    (fips: string | null, clientX: number, clientY: number) => {
+      setHoveredFips(fips);
+      onHover(fips ? (values.get(fips) ?? null) : null, clientX, clientY);
+    },
+    [values, onHover],
+  );
+
+  const handleMove = useCallback(
+    (e: React.PointerEvent<HTMLCanvasElement>) => {
+      // Touch pointers arrive here mid-drag while panning; showing a tooltip
+      // that chases the finger is noise, so touch is handled on tap instead.
+      if (e.pointerType === "touch") return;
+      selectCounty(pickAt(e.clientX, e.clientY), e.clientX, e.clientY);
+    },
+    [pickAt, selectCounty],
+  );
+
+  /* A touch pointer emits pointerleave the instant the finger lifts, which
+   * would wipe out the selection the tap just made. Only a mouse leaving the
+   * canvas should clear it. */
+  const handleLeave = useCallback(
+    (e: React.PointerEvent<HTMLCanvasElement>) => {
+      if (e.pointerType === "touch") return;
+      setHoveredFips(null);
+      onHover(null, 0, 0);
+    },
+    [onHover],
+  );
+
+  /* Touch has no hover, so a tap selects a county. A tap that moved more than
+   * a few pixels was a pan, not a selection, and is ignored. */
+  const touchStart = useRef<{ x: number; y: number } | null>(null);
+
+  const handlePointerDown = useCallback((e: React.PointerEvent<HTMLCanvasElement>) => {
+    if (e.pointerType !== "touch") return;
+    touchStart.current = { x: e.clientX, y: e.clientY };
+  }, []);
+
+  const handlePointerUp = useCallback(
+    (e: React.PointerEvent<HTMLCanvasElement>) => {
+      if (e.pointerType !== "touch") return;
+      const start = touchStart.current;
+      touchStart.current = null;
+      if (!start) return;
+      const moved = Math.hypot(e.clientX - start.x, e.clientY - start.y);
+      if (moved > 10) return;
+      const fips = pickAt(e.clientX, e.clientY);
+      // Tapping empty space or the same county again dismisses the tooltip.
+      if (fips === null || fips === hoveredFips) {
         setHoveredFips(null);
         onHover(null, 0, 0);
         return;
       }
-      const ctx = pick.getContext("2d", { willReadFrequently: true });
-      if (!ctx) return;
-      const [r, g, b] = ctx.getImageData(Math.round(x), Math.round(y), 1, 1).data;
-      const index = colorToIndex(r, g, b) - 1;
-      const f = index >= 0 ? drawList[index] : undefined;
-      const fips = f ? String(f.id) : null;
-      setHoveredFips(fips);
-      onHover(fips ? (values.get(fips) ?? null) : null, e.clientX, e.clientY);
+      selectCounty(fips, e.clientX, e.clientY);
     },
-    [drawList, values, onHover, transform],
+    [pickAt, selectCounty, hoveredFips, onHover],
   );
-
-  const handleLeave = useCallback(() => {
-    setHoveredFips(null);
-    onHover(null, 0, 0);
-  }, [onHover]);
 
   const zoomBy = useCallback((factor: number) => {
     const canvas = canvasRef.current;
@@ -282,6 +331,8 @@ export function CountyMap({
         style={{ width: size.width, height: size.height }}
         onPointerMove={handleMove}
         onPointerLeave={handleLeave}
+        onPointerDown={handlePointerDown}
+        onPointerUp={handlePointerUp}
       />
       <div className="map-controls">
         <button type="button" onClick={() => zoomBy(1.6)} aria-label="Zoom in">

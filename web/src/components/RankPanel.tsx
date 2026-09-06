@@ -36,6 +36,11 @@ export function RankPanel({
   onHoverRow,
 }: Props) {
   const [descending, setDescending] = useState(true);
+  /* On a short screen (a phone in landscape) the list and the map cannot both
+   * be useful, so the list starts folded and the map gets the space. */
+  const [collapsed, setCollapsed] = useState(
+    () => typeof window !== "undefined" && window.innerHeight < 520,
+  );
   const scrollRef = useRef<HTMLDivElement>(null);
   const [scrollTop, setScrollTop] = useState(0);
   const [viewportHeight, setViewportHeight] = useState(0);
@@ -78,9 +83,12 @@ export function RankPanel({
   const rows = ranked.slice(first, last);
 
   return (
-    <section className="rank" aria-label={`Counties ranked by ${METRIC_LABELS[metric]}`}>
+    <section
+      className={collapsed ? "rank collapsed" : "rank"}
+      aria-label={`Counties ranked by ${METRIC_LABELS[metric]}`}
+    >
       <header className="rank-head">
-        <div>
+        <div className="rank-title">
           <span className="label">Ranking</span>
           <p className="rank-sub">
             {ranked.length.toLocaleString()} counties · {METRIC_LABELS[metric]}
@@ -93,6 +101,16 @@ export function RankPanel({
           aria-label={descending ? "Sort ascending" : "Sort descending"}
         >
           {descending ? "High → low" : "Low → high"}
+        </button>
+        {/* Phone-only: the list and the map compete for a short screen, so the
+            list can be folded away to give the map the whole viewport. */}
+        <button
+          type="button"
+          className="rank-collapse"
+          aria-expanded={!collapsed}
+          onClick={() => setCollapsed((c) => !c)}
+        >
+          {collapsed ? "Show" : "Hide"}
         </button>
       </header>
 

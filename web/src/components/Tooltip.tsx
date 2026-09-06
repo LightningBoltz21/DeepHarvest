@@ -15,21 +15,40 @@ interface Props {
 
 const OFFSET = 16;
 const WIDTH = 380;
+/** Keeps the card off the very edge of the viewport. */
+const MARGIN = 8;
 
 export function Tooltip({ value, x, y, cropLabel, year }: Props) {
-  const [flip, setFlip] = useState(false);
+  const [box, setBox] = useState({ w: 0, h: 0 });
 
   useEffect(() => {
-    setFlip(x + OFFSET + WIDTH > window.innerWidth);
-  }, [x]);
+    const measure = () => setBox({ w: window.innerWidth, h: window.innerHeight });
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, []);
 
   if (!value) return null;
 
-  const left = flip ? x - OFFSET - WIDTH : x + OFFSET;
-  const top = Math.min(y + OFFSET, window.innerHeight - 240);
+  /* Prefer the right of the pointer, flip to the left when that would overflow,
+   * then clamp: on a narrow screen the card is wider than the space on either
+   * side, so flipping alone would push it off the opposite edge. */
+  const width = Math.min(WIDTH, box.w - MARGIN * 2);
+  const fitsRight = x + OFFSET + width <= box.w - MARGIN;
+  const rawLeft = fitsRight ? x + OFFSET : x - OFFSET - width;
+  const left = Math.max(MARGIN, Math.min(rawLeft, box.w - width - MARGIN));
+
+  /* Below the pointer normally; above it when the card would run off the
+   * bottom, so a tap near the foot of a phone screen stays readable. */
+  const estHeight = 260;
+  const below = y + OFFSET;
+  const top =
+    below + estHeight > box.h - MARGIN
+      ? Math.max(MARGIN, y - OFFSET - estHeight)
+      : below;
 
   return (
-    <div className="tooltip" style={{ left, top, width: WIDTH }} role="tooltip">
+    <div className="tooltip" style={{ left, top, width }} role="tooltip">
       <div className="tooltip-head">
         <strong>{value.county}</strong>
         <span className="mono">{value.state}</span>

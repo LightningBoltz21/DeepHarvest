@@ -501,7 +501,8 @@
   font-size: var(--text-xs);
 }
 
-.rank-sort {
+.rank-sort,
+.rank-collapse {
   appearance: none;
   flex: none;
   font: inherit;
@@ -516,9 +517,15 @@
   white-space: nowrap;
 }
 
-.rank-sort:hover {
+.rank-sort:hover,
+.rank-collapse:hover {
   color: var(--text);
   border-color: var(--accent-soft);
+}
+
+/* The ranking is a column of its own on desktop and always open there. */
+.rank-collapse {
+  display: none;
 }
 
 .rank-scroll {
@@ -647,9 +654,25 @@
 }
 
 @media (max-width: 60rem) {
+  /* The desktop type scale is sized for a monitor at arm's length; at phone
+   * width it eats the screen and leaves no room for the map. Step it back to
+   * something close to the personal site's scale. */
+  :root {
+    --text-xs: 0.8125rem;
+    --text-sm: 0.9375rem;
+    --text-base: 1.0625rem;
+    --text-lg: 1.1875rem;
+    --text-xl: 1.375rem;
+    --text-2xl: 1.625rem;
+    --header-height: 3.25rem;
+  }
+
+  /* The map gets the free space and a floor it cannot be squeezed below; the
+   * ranking takes only what it asks for. Without the minimum, a short
+   * viewport (a phone in landscape) collapsed the map to zero height. */
   .layout {
     grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: minmax(0, 1fr) 14rem;
+    grid-template-rows: minmax(18rem, 1fr) auto;
     position: relative;
   }
 
@@ -661,8 +684,8 @@
     display: block;
     position: absolute;
     z-index: 12;
-    top: var(--space-3);
-    right: var(--space-4);
+    top: var(--space-2);
+    right: var(--space-3);
     appearance: none;
     font: inherit;
     font-size: var(--text-xs);
@@ -673,6 +696,8 @@
     background: var(--surface);
     border: 1px solid var(--line-strong);
     border-radius: var(--radius-sm);
+    /* min-height keeps this at a comfortable tap size */
+    min-height: 44px;
     padding: var(--space-2) var(--space-3);
     cursor: pointer;
   }
@@ -706,10 +731,146 @@
   .tab {
     padding: var(--space-2) var(--space-2);
     letter-spacing: 0.06em;
+    /* comfortable thumb target */
+    min-height: 44px;
+  }
+
+  /* The title wraps to two lines on a phone and the Filters button sits over
+   * its right edge, so reserve that corner. */
+  .map-head {
+    padding: var(--space-3) var(--space-4) var(--space-1);
+    padding-right: 7.5rem;
+  }
+
+  .map-head h1 {
+    gap: var(--space-1);
   }
 
   .legend {
     max-width: none;
+    padding: var(--space-2) var(--space-4) var(--space-3);
+  }
+
+  /* Zoom controls move to the right so they cannot sit under the legend text,
+   * and grow to a real tap target. */
+  .map-controls {
+    top: auto;
+    bottom: var(--space-3);
+    left: auto;
+    right: var(--space-3);
+  }
+
+  .map-controls button {
+    width: 44px;
+    height: 44px;
+    font-size: var(--text-lg);
+  }
+
+  .map-controls .map-reset {
+    width: auto;
+    height: 36px;
+    font-size: 0.75rem;
+  }
+
+  /* Radio controls: the native input stays small, so the whole row is the
+   * target instead. */
+  .metric {
+    min-height: 44px;
+  }
+
+  .field select,
+  .field input[type="search"] {
+    min-height: 44px;
+    /* iOS zooms the page in on focus when an input is under 16px */
+    font-size: max(16px, var(--text-sm));
+  }
+
+  .rank {
+    border-left: 0;
+    border-top: 1px solid var(--line);
+    /* Enough for the header plus a few rows; the list scrolls within it. */
+    max-height: 42vh;
+  }
+
+  /* Folded away, the panel is just its header bar and the map takes the rest
+   * of the screen. */
+  .rank.collapsed .rank-scroll {
+    display: none;
+  }
+
+  .rank-head {
+    padding: var(--space-2) var(--space-3);
+    gap: var(--space-2);
+    align-items: center;
+  }
+
+  .rank-title {
+    min-width: 0;
+  }
+
+  .rank-sub {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .rank-collapse {
+    display: block;
+    min-height: 40px;
+  }
+
+  .rank-sort {
+    min-height: 40px;
+  }
+}
+
+/* Short viewports -- a phone held sideways, or a very small window. There is
+ * not enough vertical room for the title block, a full legend and the ranking
+ * all at once, so the chrome collapses to the minimum that keeps the map
+ * readable: the map itself, a compact legend and the header. */
+@media (max-width: 60rem) and (max-height: 30rem) {
+  .map-head {
+    padding: var(--space-2) var(--space-3) 0;
+    padding-right: 7rem;
+  }
+
+  .map-head h1 {
+    font-size: var(--text-sm);
+  }
+
+  /* The subtitle repeats what the sidebar controls already say. */
+  .map-head-sub {
+    display: none;
+  }
+
+  .legend {
+    padding: var(--space-1) var(--space-3) var(--space-2);
+    gap: var(--space-1);
+  }
+
+  .legend-head,
+  .legend-keys {
+    display: none;
+  }
+
+  .rank {
+    max-height: 40vh;
+  }
+
+  /* Stacked zoom buttons would cover a third of a short screen. */
+  .map-controls {
+    flex-direction: row;
+    bottom: var(--space-2);
+    right: var(--space-2);
+  }
+
+  .map-controls button {
+    width: 38px;
+    height: 38px;
+  }
+
+  .map-controls .map-reset {
+    height: 38px;
   }
 }
 
